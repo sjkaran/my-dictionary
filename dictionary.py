@@ -56,8 +56,8 @@ class Dictionary:
             else:
                 return "Word not found."
 
-        except Exception as e:
-            return f"Error: {e}"
+        except Exception :
+            return "Please check the network connection"
 
 
 #feature to add meaning to the words that are not present in the online dictionay.

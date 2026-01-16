@@ -1,77 +1,12 @@
-import tkinter as tk
+import customtkinter as ctk
 from dictionary import Dictionary
 
-dictionary = Dictionary() # creating an object
-
-root = tk.Tk()
-root.title("MY Dictionary App")
-root.geometry("500x400")
-
-title = tk.Label(
-    root,
-    text="Offline Dictionary",
-    font=("Arial",18,"bold")
-)
-title.pack(pady=20)
-
-entry = tk.Entry(root, font=("Arial",14),width=30)
-entry.pack(pady=10)
-
-status = tk.Label(
-    root,
-    text="Ready",
-    anchor="w",
-    font=("Arial",10),
-    relief=tk.SUNKEN
-)
-status.pack(side=tk.BOTTOM,fill=tk.X)
 
 
-def on_search():
-    word = entry.get().strip().lower()
-    output.delete(1.0,tk.END)
-    if not word:
-        output.insert(tk.END,"Please enter a word.")
-        return
-    
-    status.config(text="Searching...")
-    meaning = dictionary.searchdict(word)
-    status.config(text="Done")
-    output.insert(tk.END,f"{word}:\n{meaning}")
-    entry.delete(0,tk.END)
 
-search_btn = tk.Button(
-    root,
-    text="Search",
-    font=("Arial",12),
-    command=on_search
-)
-search_btn.pack(pady=10)
+# meaning of the word = dictionary.searchdict(word_to_search)
 
-
-frame = tk.Frame(root)
-frame.pack(pady=10)
-
-scrollbar = tk.Scrollbar(frame)
-scrollbar.pack(side=tk.RIGHT,fill=tk.Y)
-
-root.bind("<Return>",lambda event: on_search())
-
-output = tk.Text(
-    root,
-    height=8,
-    width=45,
-    font=("Arial",12),
-    wrap="word",
-    yscrollcommand=scrollbar.set
-)
-output.pack(pady=10)
-
-scrollbar.config(command=output.yview)
-
-def show_saved():
-    output.delete(1.0,tk.END)
-    data = dictionary.show_dictionary()
+""" showing saved word = data = dictionary.show_dictionary()
 
     if not data:
         output.insert(tk.END,"No words saved yet.")
@@ -79,25 +14,102 @@ def show_saved():
     
     for word, meaning in data.items():
         output.insert(tk.END, f"{word}:\n{meaning}\n\n")
+"""
+        
+dictionary = Dictionary()
 
-show_btn = tk.Button(
-    root,
-    text="Show Saved Words",
-    font=("Arial",11),
-    command=show_saved
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("green")
+
+root = ctk.CTk()
+root.title("My Dictionary")
+root.iconbitmap("icon.ico")
+root.geometry("700x500")
+
+#themes
+the_blue="#1B287C"
+the_skyblue="#23D9E7"
+
+theme=0
+def toggle_theme():
+    global theme
+    if theme==0:
+        ctk.set_appearance_mode("light")
+        theme+=1
+    else:
+        ctk.set_appearance_mode("dark")
+        theme-=1
+    
+top_bar = ctk.CTkFrame(root, height=50, corner_radius=1,fg_color="#1D2A2C")
+top_bar.pack(fill="x")
+
+
+title = ctk.CTkLabel(
+    top_bar,
+    text="DICTIONARY",
+    font=("Roman",36),
+    text_color=("white","white")
 )
-show_btn.pack(pady=5)
+title.pack(side="left",padx=50,pady=20)
 
-def clear_output():
-    output.delete(1.0, tk.END)
-    entry.delete(0,tk.END)
-    status.config(text="Cleared")
 
-clear_btn = tk.Button(
-    root,
-    text="Clear",
-    command=clear_output
+toggle_theme_button = ctk.CTkButton(
+    top_bar,
+    text="☀️🌘",
+    command=toggle_theme,
+    border_width=2,
+    border_color="#00C1E3",
+    fg_color="#1B287C",
+    hover_color="#70EFF8",
+    text_color="orange",
+    width=50,
+    height=25,
+    font=("Helvetica",9)
+
 )
-clear_btn.pack(pady=3)
+toggle_theme_button.pack(side="right",padx=20)
+
+loading_bar = ctk.CTkProgressBar(
+    root,
+    fg_color=(the_skyblue,the_blue),
+    progress_color=(the_blue,the_skyblue),
+    orientation="horaizontal",
+    width=20,
+    corner_radius=1
+)
+loading_bar.pack(fill="x")
+
+card = ctk.CTkFrame(
+    root, corner_radius=1
+)
+card.pack(fill="both",expand=True)
+
+entry_box = ctk.CTkEntry(
+    card,
+    height=40,
+    font=("Georgia",18),
+    border_color=(the_blue,the_skyblue),
+    border_width=3,
+    fg_color=("white","grey"),
+    placeholder_text="Enter the word...",
+)
+entry_box.pack(pady=(25,10),padx=50,fill="x")
+entry_box.focus()
+
+output_box=ctk.CTkTextbox(
+    card,
+    height=200,
+    corner_radius=1,
+    font=("Georgia",16),
+    border_color=(the_blue,the_skyblue),
+    border_width=3,
+    wrap="word"
+    )
+output_box.pack(pady=10,padx=30,fill="both",expand=True)
+
+
+# adding buttons, functions , loading bar movement, next page.
+
+
 
 root.mainloop()
