@@ -15,7 +15,6 @@ from dictionary import Dictionary
     for word, meaning in data.items():
         output.insert(tk.END, f"{word}:\n{meaning}\n\n")
 """
-        
 dictionary = Dictionary()
 
 ctk.set_appearance_mode("dark")
@@ -25,6 +24,15 @@ root = ctk.CTk()
 root.title("My Dictionary")
 root.iconbitmap("icon.ico")
 root.geometry("700x500")
+
+def on_search():
+    pass
+
+def on_clear():
+    pass
+
+def on_saved():
+    pass
 
 #themes
 the_blue="#1B287C"
@@ -92,6 +100,7 @@ entry_box = ctk.CTkEntry(
     border_width=3,
     fg_color=("white","grey"),
     placeholder_text="Enter the word...",
+    placeholder_text_color=("black","white")
 )
 entry_box.pack(pady=(25,10),padx=50,fill="x")
 entry_box.focus()
@@ -107,8 +116,54 @@ output_box=ctk.CTkTextbox(
     )
 output_box.pack(pady=10,padx=30,fill="both",expand=True)
 
+btn_frame=ctk.CTkFrame(card,fg_color="transparent")
+btn_frame.pack(pady=10)
 
-# adding buttons, functions , loading bar movement, next page.
+search_button = ctk.CTkButton(
+    btn_frame,
+    text="search",
+    font=("Helvetica",22),
+    width=140,
+    height=39,
+    fg_color=(the_blue,the_skyblue),
+    hover_color="blue",
+    corner_radius=15,
+    command=on_search,
+    text_color=("white","black")
+)
+search_button.pack(side="left",padx=10,pady=(0,30))
+
+saved_button = ctk.CTkButton(
+    btn_frame,
+    text="show saved",
+    font=("Helvetica",22),
+    width=140,
+    height=39,
+    fg_color=(the_blue,the_skyblue),
+    hover_color="blue",
+    corner_radius=15,
+    command=on_saved,
+    text_color=("white","black")
+)
+saved_button.pack(side="left",padx=10,pady=(0,30))
+
+clear_button = ctk.CTkButton(
+    btn_frame,
+    text="clear",
+    font=("Helvetica",22),
+    width=140,
+    height=39,
+    fg_color=(the_blue,the_skyblue),
+    hover_color="blue",
+    corner_radius=15,
+    command=on_clear,
+    text_color=("white","black")
+)
+clear_button.pack(side="left",padx=10,pady=(0,30))
+
+
+
+# button functions , loading bar movement, linking saved page.
 
 
 
