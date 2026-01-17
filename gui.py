@@ -15,6 +15,8 @@ from dictionary import Dictionary
     for word, meaning in data.items():
         output.insert(tk.END, f"{word}:\n{meaning}\n\n")
 """
+
+
 dictionary = Dictionary()
 
 ctk.set_appearance_mode("dark")
@@ -43,12 +45,13 @@ def toggle_theme():
     global theme
     if theme==0:
         ctk.set_appearance_mode("light")
+        title.configure(font=("Roman",36,"bold"))
         theme+=1
     else:
         ctk.set_appearance_mode("dark")
         theme-=1
     
-top_bar = ctk.CTkFrame(root, height=50, corner_radius=1,fg_color="#1D2A2C")
+top_bar = ctk.CTkFrame(root, height=50, corner_radius=1,fg_color=("#80A3A8","#1D2A2C"))
 top_bar.pack(fill="x")
 
 
@@ -56,7 +59,7 @@ title = ctk.CTkLabel(
     top_bar,
     text="DICTIONARY",
     font=("Roman",36),
-    text_color=("white","white")
+    text_color=("black","white")
 )
 title.pack(side="left",padx=50,pady=20)
 
@@ -82,7 +85,7 @@ loading_bar = ctk.CTkProgressBar(
     fg_color=(the_skyblue,the_blue),
     progress_color=(the_blue,the_skyblue),
     orientation="horaizontal",
-    width=20,
+    width=25,
     corner_radius=1
 )
 loading_bar.pack(fill="x")
