@@ -58,7 +58,7 @@ def on_search():
 
 
 def on_clear():
-    entry_box.delete(0,"end")
+    # entry_box.delete(0,"end")
     output_box.delete("1.0","end")
 
 def on_saved():
@@ -84,7 +84,7 @@ loading_bar2 = ctk.CTkProgressBar(
     fg_color=(the_blue,the_skyblue),
     progress_color=(the_skyblue,the_blue),
     orientation="horaizontal",
-    width=25,
+    width=15,
     corner_radius=1,
     mode="indeterminate",
     determinate_speed=2,
@@ -126,7 +126,7 @@ loading_bar = ctk.CTkProgressBar(
     fg_color=(the_blue,the_skyblue),
     progress_color=(the_skyblue,the_blue),
     orientation="horaizontal",
-    width=25,
+    width=15,
     corner_radius=1,
     mode="determinate",
     determinate_speed=2,
@@ -144,10 +144,11 @@ entry_box = ctk.CTkEntry(
     height=40,
     font=("Arial",18),
     border_color=(the_blue,the_skyblue),
-    border_width=3,
+    border_width=1.5,
     fg_color=("white","#58595E"),
     placeholder_text="Enter the word...",
-    placeholder_text_color=("black","white")
+    placeholder_text_color=("black","white"),
+    corner_radius=20
 )
 entry_box.pack(pady=(25,10),padx=50,fill="x")
 entry_box.focus()
@@ -155,10 +156,10 @@ entry_box.focus()
 output_box=ctk.CTkTextbox(
     card,
     height=200,
-    corner_radius=1,
+    corner_radius=20,
     font=("Georgia",16),
     border_color=(the_blue,the_skyblue),
-    border_width=3,
+    border_width=1.5,
     wrap="word"
     )
 output_box.pack(pady=10,padx=30,fill="both",expand=True)
@@ -174,7 +175,7 @@ search_button = ctk.CTkButton(
     height=39,
     fg_color=(the_blue,the_skyblue),
     hover_color="blue",
-    corner_radius=15,
+    corner_radius=10,
     command=on_search,
     text_color=("white","black")
 )
@@ -210,8 +211,9 @@ clear_button.pack(side="left",padx=10,pady=(0,30))
 
 
 
-# button functions , loading bar movement, linking saved page.
+# linking saved page.  either by sliding frames or new page.
 
 
+#loading bar width< , output box corner radius>, enter and output box border width<, buttons text size< 
 
 root.mainloop()
