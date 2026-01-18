@@ -1,7 +1,6 @@
 import customtkinter as ctk
 from dictionary import Dictionary
-
-
+import threading
 
 
 # meaning of the word = dictionary.searchdict(word_to_search)
@@ -27,11 +26,40 @@ root.title("My Dictionary")
 root.iconbitmap("icon.ico")
 root.geometry("700x500")
 
+def loading_start():
+    loading_bar2.start()
+    loading_bar.start()
+
+def loading_stop():
+    loading_bar.stop()
+    loading_bar2.stop()
+
+def search_word_thread(word):
+    meaning = dictionary.searchdict(word)
+
+    output_box.after(0, lambda: output_box.insert("end",f"{word.capitalize()}:\n{meaning}"))
+    output_box.after(0,loading_stop)
+
+
 def on_search():
-    pass
+    word=entry_box.get().strip().lower()
+    output_box.delete("1.0","end")
+
+    if not word:
+        output_box.insert("end","Please enter a word then search.")
+        return
+    
+    loading_start()
+    
+    entry_box.delete(0,"end")
+
+    search_thread = threading.Thread(target=search_word_thread,args=(word,),daemon=True)
+    search_thread.start()
+
 
 def on_clear():
-    pass
+    entry_box.delete(0,"end")
+    output_box.delete("1.0","end")
 
 def on_saved():
     pass
@@ -51,9 +79,22 @@ def toggle_theme():
         ctk.set_appearance_mode("dark")
         theme-=1
     
-top_bar = ctk.CTkFrame(root, height=50, corner_radius=1,fg_color=("#80A3A8","#1D2A2C"))
-top_bar.pack(fill="x")
+loading_bar2 = ctk.CTkProgressBar(
+    root,
+    fg_color=(the_blue,the_skyblue),
+    progress_color=(the_skyblue,the_blue),
+    orientation="horaizontal",
+    width=25,
+    corner_radius=1,
+    mode="indeterminate",
+    determinate_speed=2,
+    indeterminate_speed=2
+)
+loading_bar2.pack(fill="x")
 
+
+top_bar = ctk.CTkFrame(root, height=50, corner_radius=1,fg_color=("#B6DDE3","#1D2A2C"))
+top_bar.pack(fill="x")
 
 title = ctk.CTkLabel(
     top_bar,
@@ -82,11 +123,14 @@ toggle_theme_button.pack(side="right",padx=20)
 
 loading_bar = ctk.CTkProgressBar(
     root,
-    fg_color=(the_skyblue,the_blue),
-    progress_color=(the_blue,the_skyblue),
+    fg_color=(the_blue,the_skyblue),
+    progress_color=(the_skyblue,the_blue),
     orientation="horaizontal",
     width=25,
-    corner_radius=1
+    corner_radius=1,
+    mode="determinate",
+    determinate_speed=2,
+    indeterminate_speed=2
 )
 loading_bar.pack(fill="x")
 
@@ -98,10 +142,10 @@ card.pack(fill="both",expand=True)
 entry_box = ctk.CTkEntry(
     card,
     height=40,
-    font=("Georgia",18),
+    font=("Arial",18),
     border_color=(the_blue,the_skyblue),
     border_width=3,
-    fg_color=("white","grey"),
+    fg_color=("white","#58595E"),
     placeholder_text="Enter the word...",
     placeholder_text_color=("black","white")
 )
@@ -125,7 +169,7 @@ btn_frame.pack(pady=10)
 search_button = ctk.CTkButton(
     btn_frame,
     text="search",
-    font=("Helvetica",22),
+    font=("Arial",22),
     width=140,
     height=39,
     fg_color=(the_blue,the_skyblue),
@@ -139,7 +183,7 @@ search_button.pack(side="left",padx=10,pady=(0,30))
 saved_button = ctk.CTkButton(
     btn_frame,
     text="show saved",
-    font=("Helvetica",22),
+    font=("Arial",22),
     width=140,
     height=39,
     fg_color=(the_blue,the_skyblue),
@@ -153,7 +197,7 @@ saved_button.pack(side="left",padx=10,pady=(0,30))
 clear_button = ctk.CTkButton(
     btn_frame,
     text="clear",
-    font=("Helvetica",22),
+    font=("Arial",22),
     width=140,
     height=39,
     fg_color=(the_blue,the_skyblue),
