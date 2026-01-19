@@ -223,4 +223,6 @@ clear_button.pack(side="left",padx=10,pady=(0,30))
 # linking saved page.  either by sliding frames or new page.
 #clear a word from the saved.
 
+root.bind("<Return>", lambda event: on_search())
+
 root.mainloop()
