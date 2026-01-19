@@ -62,7 +62,16 @@ def on_clear():
     output_box.delete("1.0","end")
 
 def on_saved():
-    pass
+    output_box.delete("1.0","end")
+    data = dictionary.show_dictionary()
+
+    if not data:
+        output_box.insert("end","No Words saved yet.")
+        return
+    
+    for word, meaning in data.items():
+        output_box.insert("end",f"{word.capitalize()}:\n")
+        output_box.insert("end",f"{meaning}\n \n")
 
 #themes
 the_blue="#1B287C"
