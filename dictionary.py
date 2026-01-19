@@ -61,3 +61,4 @@ class Dictionary:
 
 
 #feature to add meaning to the words that are not present in the online dictionay.
+#feature to delete any word from the saved dictionary.

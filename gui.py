@@ -1,19 +1,15 @@
 import customtkinter as ctk
 from dictionary import Dictionary
 import threading
+import sys
+import os
 
-
-# meaning of the word = dictionary.searchdict(word_to_search)
-
-""" showing saved word = data = dictionary.show_dictionary()
-
-    if not data:
-        output.insert(tk.END,"No words saved yet.")
-        return
-    
-    for word, meaning in data.items():
-        output.insert(tk.END, f"{word}:\n{meaning}\n\n")
-"""
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS  # PyInstaller temp folder
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 
 dictionary = Dictionary()
@@ -23,8 +19,12 @@ ctk.set_default_color_theme("green")
 
 root = ctk.CTk()
 root.title("My Dictionary")
-root.iconbitmap("icon.ico")
+icon_path = resource_path("dicticon.ico")
+root.iconbitmap(icon_path)
+
 root.geometry("700x500")
+
+my_x = 700/2
 
 def loading_start():
     loading_bar2.start()
@@ -221,8 +221,6 @@ clear_button.pack(side="left",padx=10,pady=(0,30))
 
 
 # linking saved page.  either by sliding frames or new page.
-
-
-#loading bar width< , output box corner radius>, enter and output box border width<, buttons text size< 
+#clear a word from the saved.
 
 root.mainloop()
