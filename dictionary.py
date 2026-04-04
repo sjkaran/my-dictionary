@@ -60,5 +60,7 @@ class Dictionary:
             return "Please check the network connection"
 
 
-#feature to add meaning to the words that are not present in the online dictionay.
-#feature to delete any word from the saved dictionary.
+#feature to add meaning to the words that are not present in the online dictionay. (a2)
+#feature to delete any word from the saved dictionary. (important)
+#feature to play the pronounciation.
+#feature to search by voice. (voice synthesiser)
