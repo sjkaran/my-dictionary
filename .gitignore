@@ -6,3 +6,8 @@ dist/
 # Python cache
 __pycache__/
 *.pyc
+
+
+#datastorages
+*.json
+*.db
