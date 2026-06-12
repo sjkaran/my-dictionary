@@ -2,7 +2,7 @@ import requests
 import sqlite3
 from abc import ABC, abstractmethod
 
-class Dictionary:
+class DictionaryDataBase:
     def __init__(self, filename : str = "dictionary.db")-> None:
         self.filename = filename
         self.conn = None
@@ -30,14 +30,21 @@ class Dictionary:
         print("table created/verified")
 
     def search_offline(self, word: str)->str:
-        self.cursor.execute("""
-        SELECT meaning FROM dictionary word = '?'
-        """(word,))
-        meaning = self.cursor.fetchall()
-        return meaning
+        self.cursor.execute("SELECT meaning, type FROM dictionary WHERE word = ?",(word,))
+        meaning = self.cursor.fetchone()
+        return (meaning[0],meaning[1]) if meaning else None
     
-    def upload_data(self,data):
-        ...
+    def upload_data(self,data: tuple)-> bool:
+        try:
+            self.cursor.execute("INSERT INTO dictionary(word, meaning, type) VALUES (?, ? , ?)",(data[0],data[1],data[2] if len(data)==3 else '' ,))
+            self.conn.commit()
+        except Exception as e:
+            print(f"Error occured: {e}")
+            return False
+        else:
+            print("data pushed successfully.")
+            return True
+
 
     def searchdict(self,word):
         ...
@@ -47,7 +54,26 @@ class Dictionary:
 
     def delete_word(self,word: str) -> bool:
         ...
+    
+    def close(self):
+        self.cursor.close()
 
+
+dbm = DictionaryDataBase()
+
+# testing the upload_data function
+# upload = dbm.upload_data(('pillow','a soft and bagy thing to use as a support of head while sleeping','noun'))
+dbm.upload_data(('terror','something scary or threatning'))
+meaning = dbm.search_offline('terror')
+if meaning:
+    print(meaning)
+else:
+    print("you did a mistake fuck off.")
+
+
+dbm.close()
+
+# search offline feature is working.
 
 
 
