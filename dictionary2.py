@@ -49,11 +49,17 @@ class DictionaryDataBase:
     def searchdict(self,word):
         ...
 
-    def add_or_edit_word(self, word: str, meaning: str) -> None:
-        ...
+    def add_or_edit_word(self, word: str, meaning: str,wtype: str = '') -> None:
+        try:
+            self.cursor.execute("INSERT INTO dictionary(word,meaning,type) VALUES(?,?,?)",(word,meaning,wtype,))
+            self.conn.commit()
+        except:
+            print("failed commiting new word and meaning.")
+
 
     def delete_word(self,word: str) -> bool:
-        ...
+        self.cursor.execute("DELETE FROM dictionary WHERE word = ?",(word,))
+        self.conn.commit()
     
     def close(self):
         self.cursor.close()
