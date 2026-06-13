@@ -49,18 +49,30 @@ class DictionaryDataBase:
     def searchdict(self,word):
         ...
 
-    def add_or_edit_word(self, word: str, meaning: str,wtype: str = '') -> None:
+    def add_data(self, data: tuple) -> bool:
         try:
-            self.cursor.execute("INSERT INTO dictionary(word,meaning,type) VALUES(?,?,?)",(word,meaning,wtype,))
-            self.conn.commit()
+            if len(data)>=2:
+                self.cursor.execute("INSERT INTO dictionary (word, meaning, type) VALUES (?, ? ,?)",(data[0],data[1],data[2] if len(data)==3 else ''))
+            else:
+                raise ValueError("the word data must contain at least 2 or 3 values")
+            return True
         except:
-            print("failed commiting new word and meaning.")
-
+            return False
+        
+    def edit_data(self):
+        # edit the existing entry in the table.
+        ...
 
     def delete_word(self,word: str) -> bool:
         self.cursor.execute("DELETE FROM dictionary WHERE word = ?",(word,))
         self.conn.commit()
     
+    def see_all_data(self)->None:
+        self.cursor.execute("SELECT * FROM dictionary")
+        data = self.cursor.fetchall()
+        for d in data:
+            print(f"{d[0]} . {d[1]} : {d[2]}  . ({d[3] if d[3] else 'Not Defined'})")
+
     def close(self):
         self.cursor.close()
 
@@ -69,12 +81,13 @@ dbm = DictionaryDataBase()
 
 # testing the upload_data function
 # upload = dbm.upload_data(('pillow','a soft and bagy thing to use as a support of head while sleeping','noun'))
-dbm.upload_data(('terror','something scary or threatning'))
-meaning = dbm.search_offline('terror')
-if meaning:
-    print(meaning)
-else:
-    print("you did a mistake fuck off.")
+
+#testing the add_or_edit_word()
+dbm.see_all_data()
+
+# dbm.delete_word('terror')   # working fine
+# dbm.see_all_data()
+
 
 
 dbm.close()
