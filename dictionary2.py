@@ -59,9 +59,22 @@ class DictionaryDataBase:
         except:
             return False
         
-    def edit_data(self):
+    def edit_data(self,word: str, meaning: str = '', wtype: str = '')-> bool:
         # edit the existing entry in the table.
-        ...
+        try:
+            if wtype and meaning:
+                self.cursor.execute("UPDATE dictionary SET meaning = ?, type = ? WHERE word = ?",(meaning, wtype, word))
+            elif wtype:
+                self.cursor.execute("UPDATE dictionary SET type = ? WHERE word = ?",(wtype, word))
+            elif meaning:
+                self.cursor.execute("UPDATE dictionary SET meaning = ? WHERE word = ?",(meaning, word))
+            else:
+                raise ValueError("False call, put the value of meaning or word type of a word to update.")
+            self.conn.commit()            
+            return True
+        except Exception as e:
+            print("Issue occurred.",e)
+            return False
 
     def delete_word(self,word: str) -> bool:
         self.cursor.execute("DELETE FROM dictionary WHERE word = ?",(word,))
@@ -83,13 +96,18 @@ dbm = DictionaryDataBase()
 # upload = dbm.upload_data(('pillow','a soft and bagy thing to use as a support of head while sleeping','noun'))
 
 #testing the add_or_edit_word()
-dbm.see_all_data()
+# dbm.see_all_data()
 
 # dbm.delete_word('terror')   # working fine
 # dbm.see_all_data()
+# dbm.cursor.execute("SELECT * FROM dictionary WHERE word = ? ",('pillow',))
+# print(dbm.cursor.fetchall())
 
+# dbm.edit_data(word = 'pillow',meaning='A Bag like object filled with cushon Helpfull for sleeping.',wtype='Noun')
+# dbm.edit_data(word = 'pillow')
 
-
+dbm.cursor.execute("SELECT * FROM dictionary WHERE word = ? ",('pillow',))
+print(dbm.cursor.fetchall())
 dbm.close()
 
 # search offline feature is working.
