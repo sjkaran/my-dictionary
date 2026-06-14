@@ -72,3 +72,20 @@ class Dictionary:
             self.upload_data(data)
             return True
         return False
+    
+
+d = Dictionary()
+print(type(d.search_offline('socialism')))
+print(d.search_offline('socialism'))
+    
+
+"""
+Description of all Functions :
+load_file: (not required)
+show_dictionary: inp- None , out-dict (returns the total data in dictionary)
+search_offline(): inp-str , out-str/bool (returns the meaning of the argumented word)
+upload_data(): Not required (json specific)
+searchdict: inp-str, out-str (searches the word first in the db then online and provide the meaning as output)
+add_or_edit_word: inp1-str, inp2-str, out-None (edits the word meaning in the db.)
+delete_word: inp-str, output-bool, (deletes the argumented word from the offline storage)
+"""

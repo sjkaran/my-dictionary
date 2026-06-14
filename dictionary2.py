@@ -29,10 +29,14 @@ class DictionaryDataBase:
         self.conn.commit()
         print("table created/verified")
 
-    def search_offline(self, word: str)->str:
-        self.cursor.execute("SELECT meaning, type FROM dictionary WHERE word = ?",(word,))
-        meaning = self.cursor.fetchone()
-        return (meaning[0],meaning[1]) if meaning else None
+    def search_offline(self, word: str)-> tuple:
+        try:
+            self.cursor.execute("SELECT meaning, type FROM dictionary WHERE word = ?",(word,))
+            meaning = self.cursor.fetchone()
+            return (meaning[0],meaning[1]) if meaning else None
+        except:
+            print("Error occured")
+            return False
     
     def upload_data(self,data: tuple)-> bool:
         try:
@@ -77,42 +81,40 @@ class DictionaryDataBase:
             return False
 
     def delete_word(self,word: str) -> bool:
-        self.cursor.execute("DELETE FROM dictionary WHERE word = ?",(word,))
-        self.conn.commit()
+        try:
+            self.cursor.execute("DELETE FROM dictionary WHERE word = ?",(word,))
+            self.conn.commit()
+            return True
+        except:
+            return False
     
-    def see_all_data(self)->None:
+    def show_dictionary(self)-> list[tuple]:
         self.cursor.execute("SELECT * FROM dictionary")
         data = self.cursor.fetchall()
-        for d in data:
-            print(f"{d[0]} . {d[1]} : {d[2]}  . ({d[3] if d[3] else 'Not Defined'})")
+        return data   # list(tuple(<serial_number>, <word>, <meaning>, <type>),)
+
 
     def close(self):
         self.cursor.close()
 
 
-dbm = DictionaryDataBase()
 
-# testing the upload_data function
-# upload = dbm.upload_data(('pillow','a soft and bagy thing to use as a support of head while sleeping','noun'))
 
-#testing the add_or_edit_word()
-# dbm.see_all_data()
-
-# dbm.delete_word('terror')   # working fine
-# dbm.see_all_data()
-# dbm.cursor.execute("SELECT * FROM dictionary WHERE word = ? ",('pillow',))
-# print(dbm.cursor.fetchall())
-
-# dbm.edit_data(word = 'pillow',meaning='A Bag like object filled with cushon Helpfull for sleeping.',wtype='Noun')
-# dbm.edit_data(word = 'pillow')
-
-dbm.cursor.execute("SELECT * FROM dictionary WHERE word = ? ",('pillow',))
-print(dbm.cursor.fetchall())
-dbm.close()
-
-# search offline feature is working.
+test = DictionaryDataBase()
+print(test.show_dictionary())
 
 
 
+"""
+Changes:
+show_dictionary: output: dict -> list[tuple]
+search_offline: output: str/bool -> tuple(meanind, type)/bool(False)/None
+add_or_edit_word() -> edit_data() : inp3- str (word type), output- bool
+delete_word: output: None -> bool.
 
+Untaken:  # json specific
+load_file()
+upload_data()
+
+"""
 

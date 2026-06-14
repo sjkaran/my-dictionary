@@ -207,7 +207,7 @@ top_bar.pack(fill="x")
 title = ctk.CTkLabel(
     top_bar,
     text="DICTIONARY",
-    font=("Roman",36),
+    font=("Helvetica",36),
     text_color=("black","white")
 )
 title.pack(side="left",padx=50,pady=20)
@@ -341,11 +341,11 @@ edit_button = ctk.CTkButton(
     font=("Arial", 18),
     width=140,
     height=35,
-    fg_color=(the_blue,the_skyblue),
+    fg_color=("#FF9808","#FFC108"),
     hover_color="blue",
     corner_radius=15,
     command=on_edit,
-    text_color=("white","black")
+    text_color=("black","black")
 )
 edit_button.pack(side="left", padx=10)
 
