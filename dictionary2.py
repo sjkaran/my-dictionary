@@ -51,7 +51,27 @@ class DictionaryDataBase:
 
 
     def searchdict(self,word):
-        ...
+        offline_meaning = self.search_offline(word)
+
+        if offline_meaning:
+            return offline_meaning
+        
+        data = self.load_file()
+
+        url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
+
+        try:
+            response = requests.get(url)
+            if response.statuse_code == 200:
+                api_data = response.json()
+                meaning = api_data[0]["meanings"][0]["definitions"][0]["definition"]
+                data[word]=meaning
+                return meaning
+            else:
+                return "Word not found."
+            
+        except Exception:
+            return "Please check the netwrok conncection"
 
     def add_data(self, data: tuple) -> bool:
         try:
