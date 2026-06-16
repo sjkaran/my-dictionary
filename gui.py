@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from dictionary import Dictionary
+from dictionary2 import DictionaryDataBase
 import threading
 import sys
 import os
@@ -13,7 +13,7 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-dictionary = Dictionary()
+dictionary = DictionaryDataBase()
 
 
 ctk.set_appearance_mode("dark")
@@ -49,14 +49,17 @@ def ask_to_add_word(word):
     """Feature 2: Prompts the user to save the word if not found."""
     dialog = ctk.CTkInputDialog(text=f"'{word}' was not found.\nEnter meaning to save it offline:", title="Add Missing Word")
     meaning = dialog.get_input()
+    dialog2 = ctk.CTkInputDialog(text=f"Add the word type please...",title="adding the word type.")
+    wtype = dialog2.get_input()
+    data_arg = (word, meaning,wtype if wtype else "Not Defined")
     if meaning:
-        dictionary.add_or_edit_word(word, meaning)
+        dictionary.upload_data(data_arg)
         output_box.insert("end", f"\n\n[Successfully saved '{word.capitalize()}' to local dictionary!]")
 
 def search_word_thread(word):
     meaning = dictionary.searchdict(word)
 
-    output_box.after(0, lambda: output_box.insert("end",f"{word.capitalize()}:\n{meaning}"))
+    output_box.after(0, lambda: output_box.insert("end",f"{word.capitalize()}:\n{meaning[0]}\ntype: {meaning[1]}"))
     output_box.after(0, loading_stop)
     
     # Check if we should trigger Feature 2 (Word not found)
@@ -100,9 +103,10 @@ def on_saved():
         output_box.insert("end","No Words saved yet.")
         return
     
-    for word, meaning in data.items():
-        output_box.insert("end",f"{word.capitalize()}:\n")
-        output_box.insert("end",f"{meaning}\n \n")
+    for datas in data:
+        output_box.insert("end",f"{data[0]}. {data[1].capitalize()}:\n")
+        output_box.insert("end",f"{data[2]}\n")
+        output_box.insert("end",f"{data[3]}\n\n ")
 
 
 def on_pronounce():
@@ -144,9 +148,12 @@ def on_edit():
         
     dialog = ctk.CTkInputDialog(text=f"Enter new meaning for '{word}':", title="Edit Word")
     new_meaning = dialog.get_input()
-    
+    dialog2 = ctk.CTkInputDialog(text=f"what is the Type of the word {word}",title="editing type of the word.")
+    new_type = dialog2.get_input()
+    new_type = new_type if new_type else 'Not Defined'
+
     if new_meaning:
-        dictionary.add_or_edit_word(word, new_meaning)
+        dictionary.add_or_edit_word(word=word, meaning=new_meaning,wtype=new_type)
         output_box.delete("1.0", "end")
         output_box.insert("end", f"Successfully updated meaning for '{word.capitalize()}'.")
 

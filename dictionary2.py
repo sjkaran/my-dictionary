@@ -1,6 +1,7 @@
 import requests
 import sqlite3
 from abc import ABC, abstractmethod
+import requests
 
 class DictionaryDataBase:
     def __init__(self, filename : str = "dictionary.db")-> None:
@@ -31,7 +32,7 @@ class DictionaryDataBase:
 
     def search_offline(self, word: str)-> tuple:
         try:
-            self.cursor.execute("SELECT meaning, type FROM dictionary WHERE word = ?",(word,))
+            self.cursor.execute("SELECT meaning,type FROM dictionary WHERE word = ?",(word,))
             meaning = self.cursor.fetchone()
             return (meaning[0],meaning[1]) if meaning else None
         except:
@@ -40,7 +41,7 @@ class DictionaryDataBase:
     
     def upload_data(self,data: tuple)-> bool:
         try:
-            self.cursor.execute("INSERT INTO dictionary(word, meaning, type) VALUES (?, ? , ?)",(data[0],data[1],data[2] if len(data)==3 else '' ,))
+            self.cursor.execute("INSERT INTO dictionary(word, meaning, type) VALUES (?, ? , ?)",(data[0],data[1],data[2] if len(data)==3 else 'Not Defined.' ,))
             self.conn.commit()
         except Exception as e:
             print(f"Error occured: {e}")
@@ -55,8 +56,6 @@ class DictionaryDataBase:
 
         if offline_meaning:
             return offline_meaning
-        
-        data = self.load_file()
 
         url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
 
@@ -65,7 +64,7 @@ class DictionaryDataBase:
             if response.statuse_code == 200:
                 api_data = response.json()
                 meaning = api_data[0]["meanings"][0]["definitions"][0]["definition"]
-                data[word]=meaning
+                self.upload_data((word,meaning,))
                 return meaning
             else:
                 return "Word not found."
@@ -73,15 +72,6 @@ class DictionaryDataBase:
         except Exception:
             return "Please check the netwrok conncection"
 
-    def add_data(self, data: tuple) -> bool:
-        try:
-            if len(data)>=2:
-                self.cursor.execute("INSERT INTO dictionary (word, meaning, type) VALUES (?, ? ,?)",(data[0],data[1],data[2] if len(data)==3 else ''))
-            else:
-                raise ValueError("the word data must contain at least 2 or 3 values")
-            return True
-        except:
-            return False
         
     def edit_data(self,word: str, meaning: str = '', wtype: str = '')-> bool:
         # edit the existing entry in the table.
@@ -125,6 +115,9 @@ print(test.show_dictionary())
 
 
 
+
+
+
 """
 Changes:
 show_dictionary: output: dict -> list[tuple]
@@ -136,5 +129,7 @@ Untaken:  # json specific
 load_file()
 upload_data()
 
+New: #sql needed
+upload_data() > inserts new data row in the table.
 """
 
