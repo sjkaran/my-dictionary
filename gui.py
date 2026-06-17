@@ -104,9 +104,9 @@ def on_saved():
         return
     
     for datas in data:
-        output_box.insert("end",f"{data[0]}. {data[1].capitalize()}:\n")
-        output_box.insert("end",f"{data[2]}\n")
-        output_box.insert("end",f"{data[3]}\n\n ")
+        output_box.insert("end",f"{datas[0]}. {datas[1].capitalize()}:\n")
+        output_box.insert("end",f"{datas[2]}\n")
+        output_box.insert("end",f"{datas[3]}\n\n ")
 
 
 def on_pronounce():

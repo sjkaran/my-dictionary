@@ -34,9 +34,10 @@ class DictionaryDataBase:
         try:
             self.cursor.execute("SELECT meaning,type FROM dictionary WHERE word = ?",(word,))
             meaning = self.cursor.fetchone()
+            print(meaning)
             return (meaning[0],meaning[1]) if meaning else None
-        except:
-            print("Error occured")
+        except Exception as e:
+            print(e)
             return False
     
     def upload_data(self,data: tuple)-> bool:
@@ -106,12 +107,6 @@ class DictionaryDataBase:
 
     def close(self):
         self.cursor.close()
-
-
-
-
-test = DictionaryDataBase()
-print(test.show_dictionary())
 
 
 
