@@ -38,7 +38,7 @@ class DictionaryDataBase:
             return (meaning[0],meaning[1]) if meaning else None
         except Exception as e:
             print(e)
-            return False
+            return
     
     def upload_data(self,data: tuple)-> bool:
         try:

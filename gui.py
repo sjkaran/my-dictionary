@@ -153,7 +153,7 @@ def on_edit():
     new_type = new_type if new_type else 'Not Defined'
 
     if new_meaning:
-        dictionary.add_or_edit_word(word=word, meaning=new_meaning,wtype=new_type)
+        dictionary.edit_data(word=word, meaning=new_meaning,wtype=new_type)
         output_box.delete("1.0", "end")
         output_box.insert("end", f"Successfully updated meaning for '{word.capitalize()}'.")
 
