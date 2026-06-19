@@ -1,8 +1,5 @@
 import requests
 import sqlite3
-from abc import ABC, abstractmethod
-import requests
-
 class DictionaryDataBase:
     def __init__(self, filename : str = "dictionary.db")-> None:
         self.filename = filename
@@ -37,8 +34,8 @@ class DictionaryDataBase:
             print(meaning)
             return (meaning[0],meaning[1]) if meaning else None
         except Exception as e:
-            print(e)
-            return
+            print(f"Database Error:",e)
+            return None
     
     def upload_data(self,data: tuple)-> bool:
         try:
@@ -52,7 +49,18 @@ class DictionaryDataBase:
             return True
 
 
-    def searchdict(self,word):
+    def searchdict(self,word:str)-> tuple:
+        if not word or not isinstance(word,str):
+            return ("Invalid input.","N/A")
+        
+        word = word.strip().lower()
+        if len(word)>100:
+            return ("Word too long.", "N/A")
+        
+        if not all(c.isalnum() or c in '-' for c in word):
+            return ("Invalid word format.","N/A")
+        
+
         offline_meaning = self.search_offline(word)
 
         if offline_meaning:
@@ -61,18 +69,23 @@ class DictionaryDataBase:
         url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
 
         try:
-            response = requests.get(url)
-            if response.statuse_code == 200:
+            response = requests.get(url,timeout=5)
+            response.raise_for_status()
+        except requests.Timeout:
+            return ("Request timed out. check you connection.","Network Issue")
+        except requests.ConnectionError:
+            return ("No Internet connection.","Network Issue")
+        except requests.HTTPError as e:
+            return(f"API error: {e.response.status_code}","N/A")
+        except Exception as e:
+            return ("An unexpected error occurred.","N/A")
+        if response.status_code == 200:
                 api_data = response.json()
                 meaning = api_data[0]["meanings"][0]["definitions"][0]["definition"]
                 self.upload_data((word,meaning,))
-                return meaning
-            else:
-                return "Word not found."
-            
-        except Exception:
-            return "Please check the netwrok conncection"
-
+                return (meaning, "Not Defined")
+        else:
+                return ("Word not found.","None")
         
     def edit_data(self,word: str, meaning: str = '', wtype: str = '')-> bool:
         # edit the existing entry in the table.
