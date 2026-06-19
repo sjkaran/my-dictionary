@@ -3,18 +3,25 @@ from dictionary2 import DictionaryDataBase
 import threading
 import sys
 import os
-import win32com.client
-import pythoncom
+
+# FIX: Guard Windows-only TTS imports so the app doesn't crash on macOS/Linux.
+try:
+    import win32com.client
+    import pythoncom
+    TTS_AVAILABLE = True
+except ImportError:
+    TTS_AVAILABLE = False
+
 
 def resource_path(relative_path):
     try:
-        base_path = sys._MEIPASS  # PyInstaller temp folder
+        base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-dictionary = DictionaryDataBase()
 
+dictionary = DictionaryDataBase()
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("green")
@@ -23,7 +30,6 @@ root = ctk.CTk()
 root.title("My Dictionary")
 icon_path = resource_path("dicticon.ico")
 
-# --- FIX: Safely load the icon only if it actually exists ---
 if os.path.exists(icon_path):
     try:
         root.iconbitmap(icon_path)
@@ -32,43 +38,59 @@ if os.path.exists(icon_path):
 else:
     print(f"Warning: '{icon_path}' not found. Running with default icon.")
 
-# Slightly increased height to elegantly fit the new buttons without ruining the old UI
 root.geometry("700x570")
 
-my_x = 700/2
+my_x = 700 / 2
+
 
 def loading_start():
     loading_bar2.start()
     loading_bar.start()
 
+
 def loading_stop():
     loading_bar.stop()
     loading_bar2.stop()
 
+
 def ask_to_add_word(word):
-    """Feature 2: Prompts the user to save the word if not found."""
-    dialog = ctk.CTkInputDialog(text=f"'{word}' was not found.\nEnter meaning to save it offline:", title="Add Missing Word")
+    """Prompts the user to save a word that wasn't found online."""
+    dialog = ctk.CTkInputDialog(
+        text=f"'{word}' was not found.\nEnter meaning to save it offline:",
+        title="Add Missing Word",
+    )
     meaning = dialog.get_input()
-    dialog2 = ctk.CTkInputDialog(text=f"Add the word type please...",title="adding the word type.")
-    wtype = dialog2.get_input()
-    data_arg = (word, meaning,wtype if wtype else "Not Defined")
-    if meaning:
-        dictionary.upload_data(data_arg)
-        output_box.insert("end", f"\n\n[Successfully saved '{word.capitalize()}' to local dictionary!]")
+    if meaning:                     # Don't open the second dialog if user cancelled
+        dialog2 = ctk.CTkInputDialog(
+            text="Add the word type (noun, verb, adjective…):",
+            title="Word Type",
+        )
+        wtype = dialog2.get_input()
+        dictionary.upload_data((word, meaning, wtype if wtype else "Not Defined"))
+        output_box.insert(
+            "end", f"\n\n[Successfully saved '{word.capitalize()}' to local dictionary!]"
+        )
+
 
 def search_word_thread(word):
     meaning = dictionary.searchdict(word)
 
-    output_box.after(0, lambda: output_box.insert("end",f"{word.capitalize()}:\n{meaning[0]}\ntype: {meaning[1]}"))
+    output_box.after(
+        0,
+        lambda: output_box.insert(
+            "end", f"{word.capitalize()}:\n{meaning[0]}\nType: {meaning[1]}"
+        ),
+    )
     output_box.after(0, loading_stop)
-    
-    # Check if we should trigger Feature 2 (Word not found)
-    if meaning == "Word not found.":
+
+    # FIX: meaning is a tuple — was comparing the whole tuple to a string,
+    # which is always False, so the "add missing word" dialog never appeared.
+    if meaning[0] == "Word not found.":
         output_box.after(100, lambda: ask_to_add_word(word))
 
 
+current_searched_word = ""
 
-current_searched_word = ""  # The app's short-term memory
 
 def on_search():
     global current_searched_word
@@ -78,147 +100,162 @@ def on_search():
     if not word:
         output_box.insert("end", "Please enter a word then search.")
         return
-    
-    # Save the word to memory before clearing the box
-    current_searched_word = word  
-    
-    loading_start()
-    
-    entry_box.delete(0, "end") # Box clears, but memory retains the word!
 
-    search_thread = threading.Thread(target=search_word_thread, args=(word,), daemon=True)
+    current_searched_word = word
+    loading_start()
+    entry_box.delete(0, "end")
+
+    search_thread = threading.Thread(
+        target=search_word_thread, args=(word,), daemon=True
+    )
     search_thread.start()
 
 
 def on_clear():
-    # entry_box.delete(0,"end")
-    output_box.delete("1.0","end")
+    output_box.delete("1.0", "end")
 
 
 def on_saved():
-    output_box.delete("1.0","end")
+    output_box.delete("1.0", "end")
     data = dictionary.show_dictionary()
 
     if not data:
-        output_box.insert("end","No Words saved yet.")
+        output_box.insert("end", "No words saved yet.")
         return
-    
-    for datas in data:
-        output_box.insert("end",f"{datas[0]}. {datas[1].capitalize()}:\n")
-        output_box.insert("end",f"{datas[2]}\n")
-        output_box.insert("end",f"{datas[3]}\n\n ")
+
+    for row in data:
+        output_box.insert("end", f"{row[0]}. {row[1].capitalize()}:\n")
+        output_box.insert("end", f"{row[2]}\n")
+        output_box.insert("end", f"{row[3]}\n\n")
 
 
 def on_pronounce():
     global current_searched_word
     word = entry_box.get().strip().lower() or current_searched_word
-    
+
     if not word:
         output_box.insert("end", "\n[System: Please search for a word to pronounce.]")
         return
-        
+
+    if not TTS_AVAILABLE:
+        output_box.insert(
+            "end", "\n[System: Text-to-speech is only supported on Windows.]"
+        )
+        return
+
     def safe_speak():
         try:
-            # 1. Initialize a clean memory state for THIS specific thread
             pythoncom.CoInitialize()
-            
-            # 2. Directly hook into Windows native text-to-speech (Bypassing pyttsx3)
             speaker = win32com.client.Dispatch("SAPI.SpVoice")
             speaker.Speak(word)
-            
         except Exception as e:
             print(f"Audio Error: {e}")
         finally:
-            # 3. CRITICAL: Destroy the object immediately after speaking. 
-            # It leaves zero footprint, guaranteeing the next click will work flawlessly.
             pythoncom.CoUninitialize()
 
-    # Spin up a clean, disposable thread every single time you click
     threading.Thread(target=safe_speak, daemon=True).start()
-
 
 
 def on_edit():
     global current_searched_word
     word = entry_box.get().strip().lower() or current_searched_word
-    
+
     if not word:
         output_box.insert("end", "\n[System: Please search for a word to edit first.]")
         return
-        
-    dialog = ctk.CTkInputDialog(text=f"Enter new meaning for '{word}':", title="Edit Word")
+
+    dialog = ctk.CTkInputDialog(
+        text=f"Enter new meaning for '{word}':", title="Edit Word"
+    )
     new_meaning = dialog.get_input()
-    dialog2 = ctk.CTkInputDialog(text=f"what is the Type of the word {word}",title="editing type of the word.")
-    new_type = dialog2.get_input()
-    new_type = new_type if new_type else 'Not Defined'
+    if not new_meaning:             # User cancelled — bail out early
+        return
 
-    if new_meaning:
-        dictionary.edit_data(word=word, meaning=new_meaning,wtype=new_type)
-        output_box.delete("1.0", "end")
-        output_box.insert("end", f"Successfully updated meaning for '{word.capitalize()}'.")
+    dialog2 = ctk.CTkInputDialog(
+        text=f"Enter new type for '{word}' (noun, verb…):", title="Edit Word Type"
+    )
+    new_type = dialog2.get_input() or "Not Defined"
 
+    dictionary.edit_data(word=word, meaning=new_meaning, wtype=new_type)
+    output_box.delete("1.0", "end")
+    output_box.insert("end", f"Successfully updated meaning for '{word.capitalize()}'.")
 
 
 def on_delete():
     global current_searched_word
     word = entry_box.get().strip().lower() or current_searched_word
-    
+
     if not word:
-        output_box.insert("end", "\n[System: Please search for a word to delete first.]")
+        output_box.insert(
+            "end", "\n[System: Please search for a word to delete first.]"
+        )
         return
-        
+
     success = dictionary.delete_word(word)
     output_box.delete("1.0", "end")
-    
+
     if success:
-        output_box.insert("end", f"Successfully removed '{word.capitalize()}' from saved dictionary.")
+        output_box.insert(
+            "end", f"Successfully removed '{word.capitalize()}' from saved dictionary."
+        )
         entry_box.delete(0, "end")
-        current_searched_word = ""  # Clear memory after deletion
+        current_searched_word = ""
     else:
-        output_box.insert("end", f"Could not find '{word.capitalize()}' in saved dictionary.")
+        output_box.insert(
+            "end", f"Could not find '{word.capitalize()}' in saved dictionary."
+        )
 
 
+def on_closing():
+    # FIX: properly close the SQLite connection before the window is destroyed.
+    dictionary.close()
+    root.destroy()
 
-#themes
-the_blue="#1B287C"
-the_skyblue="#23D9E7"
 
-theme=0
+# ── Themes ────────────────────────────────────────────────────────────────────
+
+the_blue = "#1B287C"
+the_skyblue = "#23D9E7"
+
+theme = 0
+
+
 def toggle_theme():
     global theme
-    if theme==0:
+    if theme == 0:
         ctk.set_appearance_mode("light")
-        title.configure(font=("Roman",36,"bold"))
-        theme+=1
+        title.configure(font=("Roman", 36, "bold"))
+        theme += 1
     else:
         ctk.set_appearance_mode("dark")
-        theme-=1
-    
+        theme -= 1
+
+
+# ── UI Layout ─────────────────────────────────────────────────────────────────
+
 loading_bar2 = ctk.CTkProgressBar(
     root,
-    fg_color=(the_blue,the_skyblue),
-    progress_color=(the_skyblue,the_blue),
-    orientation="horaizontal",
+    fg_color=(the_blue, the_skyblue),
+    progress_color=(the_skyblue, the_blue),
+    orientation="horizontal",       # FIX: was "horaizontal" (typo)
     width=15,
     corner_radius=1,
     mode="indeterminate",
     determinate_speed=2,
-    indeterminate_speed=2
+    indeterminate_speed=2,
 )
 loading_bar2.pack(fill="x")
 
-
-top_bar = ctk.CTkFrame(root, height=50, corner_radius=1,fg_color=("#B6DDE3","#1D2A2C"))
+top_bar = ctk.CTkFrame(root, height=50, corner_radius=1, fg_color=("#B6DDE3", "#1D2A2C"))
 top_bar.pack(fill="x")
 
 title = ctk.CTkLabel(
     top_bar,
     text="DICTIONARY",
-    font=("Helvetica",36),
-    text_color=("black","white")
+    font=("Helvetica", 36),
+    text_color=("black", "white"),
 )
-title.pack(side="left",padx=50,pady=20)
-
+title.pack(side="left", padx=50, pady=20)
 
 toggle_theme_button = ctk.CTkButton(
     top_bar,
@@ -231,100 +268,100 @@ toggle_theme_button = ctk.CTkButton(
     text_color="orange",
     width=50,
     height=25,
-    font=("Helvetica",9)
+    font=("Helvetica", 9),
 )
-toggle_theme_button.pack(side="right",padx=20)
+toggle_theme_button.pack(side="right", padx=20)
 
 loading_bar = ctk.CTkProgressBar(
     root,
-    fg_color=(the_blue,the_skyblue),
-    progress_color=(the_skyblue,the_blue),
-    orientation="horaizontal",
+    fg_color=(the_blue, the_skyblue),
+    progress_color=(the_skyblue, the_blue),
+    orientation="horizontal",       # FIX: was "horaizontal" (typo)
     width=15,
     corner_radius=1,
-    mode="determinate",
+    mode="indeterminate",           # FIX: was "determinate" — .start() has no
+                                    # effect on a determinate bar, so the lower
+                                    # loading animation never moved.
     determinate_speed=2,
-    indeterminate_speed=2
+    indeterminate_speed=2,
 )
 loading_bar.pack(fill="x")
 
-card = ctk.CTkFrame(
-    root, corner_radius=1
-)
-card.pack(fill="both",expand=True)
+card = ctk.CTkFrame(root, corner_radius=1)
+card.pack(fill="both", expand=True)
 
 entry_box = ctk.CTkEntry(
     card,
     height=40,
-    font=("Arial",18),
-    border_color=(the_blue,the_skyblue),
+    font=("Arial", 18),
+    border_color=(the_blue, the_skyblue),
     border_width=1.5,
-    fg_color=("white","#58595E"),
+    fg_color=("white", "#58595E"),
     placeholder_text="Enter the word...",
-    placeholder_text_color=("black","white"),
-    corner_radius=20
+    placeholder_text_color=("black", "white"),
+    corner_radius=20,
 )
-entry_box.pack(pady=(25,10),padx=50,fill="x")
+entry_box.pack(pady=(25, 10), padx=50, fill="x")
 entry_box.focus()
 
-output_box=ctk.CTkTextbox(
+output_box = ctk.CTkTextbox(
     card,
     height=200,
     corner_radius=20,
-    font=("Georgia",16),
-    border_color=(the_blue,the_skyblue),
+    font=("Georgia", 16),
+    border_color=(the_blue, the_skyblue),
     border_width=1.5,
-    wrap="word"
-    )
-output_box.pack(pady=10,padx=30,fill="both",expand=True)
+    wrap="word",
+)
+output_box.pack(pady=10, padx=30, fill="both", expand=True)
 
-# ORIGINAL BUTTONS FRAME
-btn_frame=ctk.CTkFrame(card,fg_color="transparent")
-btn_frame.pack(pady=(10, 5))  # Adjusted padding slightly to fit the new row
+# Original buttons row
+btn_frame = ctk.CTkFrame(card, fg_color="transparent")
+btn_frame.pack(pady=(10, 5))
 
 search_button = ctk.CTkButton(
     btn_frame,
     text="search",
-    font=("Arial",22),
+    font=("Arial", 22),
     width=140,
     height=39,
-    fg_color=(the_blue,the_skyblue),
+    fg_color=(the_blue, the_skyblue),
     hover_color="blue",
     corner_radius=10,
     command=on_search,
-    text_color=("white","black")
+    text_color=("white", "black"),
 )
-search_button.pack(side="left",padx=10)
+search_button.pack(side="left", padx=10)
 
 saved_button = ctk.CTkButton(
     btn_frame,
     text="show saved",
-    font=("Arial",22),
+    font=("Arial", 22),
     width=140,
     height=39,
-    fg_color=(the_blue,the_skyblue),
+    fg_color=(the_blue, the_skyblue),
     hover_color="blue",
     corner_radius=15,
     command=on_saved,
-    text_color=("white","black")
+    text_color=("white", "black"),
 )
-saved_button.pack(side="left",padx=10)
+saved_button.pack(side="left", padx=10)
 
 clear_button = ctk.CTkButton(
     btn_frame,
     text="clear",
-    font=("Arial",22),
+    font=("Arial", 22),
     width=140,
     height=39,
-    fg_color=(the_blue,the_skyblue),
+    fg_color=(the_blue, the_skyblue),
     hover_color="blue",
     corner_radius=15,
     command=on_clear,
-    text_color=("white","black")
+    text_color=("white", "black"),
 )
-clear_button.pack(side="left",padx=10)
+clear_button.pack(side="left", padx=10)
 
-# --- NEW FEATURE BUTTONS FRAME ---
+# Action buttons row
 action_frame = ctk.CTkFrame(card, fg_color="transparent")
 action_frame.pack(pady=(5, 20))
 
@@ -334,11 +371,11 @@ pronounce_button = ctk.CTkButton(
     font=("Arial", 18),
     width=140,
     height=35,
-    fg_color=(the_blue,the_skyblue),
+    fg_color=(the_blue, the_skyblue),
     hover_color="blue",
     corner_radius=15,
     command=on_pronounce,
-    text_color=("white","black")
+    text_color=("white", "black"),
 )
 pronounce_button.pack(side="left", padx=10)
 
@@ -348,11 +385,11 @@ edit_button = ctk.CTkButton(
     font=("Arial", 18),
     width=140,
     height=35,
-    fg_color=("#FF9808","#FFC108"),
+    fg_color=("#FF9808", "#FFC108"),
     hover_color="blue",
     corner_radius=15,
     command=on_edit,
-    text_color=("black","black")
+    text_color=("black", "black"),
 )
 edit_button.pack(side="left", padx=10)
 
@@ -362,15 +399,14 @@ delete_button = ctk.CTkButton(
     font=("Arial", 18),
     width=140,
     height=35,
-    fg_color=("#D32F2F", "#F44336"), # A distinct red color for destructive action
+    fg_color=("#D32F2F", "#F44336"),
     hover_color="#B71C1C",
     corner_radius=15,
     command=on_delete,
-    text_color="white"
+    text_color="white",
 )
 delete_button.pack(side="left", padx=10)
 
-
 root.bind("<Return>", lambda event: on_search())
-
+root.protocol("WM_DELETE_WINDOW", on_closing)   # FIX: ensures DB is closed on exit
 root.mainloop()
