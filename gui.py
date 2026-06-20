@@ -214,8 +214,8 @@ def on_closing():
 
 # ── Themes ────────────────────────────────────────────────────────────────────
 
-the_blue = "#1B287C"
-the_skyblue = "#23D9E7"
+the_blue = "#080877"
+the_skyblue = "#05FCFC"
 
 theme = 0
 
@@ -224,7 +224,7 @@ def toggle_theme():
     global theme
     if theme == 0:
         ctk.set_appearance_mode("light")
-        title.configure(font=("Roman", 36, "bold"))
+        title.configure(font=("Helvetica", 36, "bold"))
         theme += 1
     else:
         ctk.set_appearance_mode("dark")
@@ -246,7 +246,7 @@ loading_bar2 = ctk.CTkProgressBar(
 )
 loading_bar2.pack(fill="x")
 
-top_bar = ctk.CTkFrame(root, height=50, corner_radius=1, fg_color=("#B6DDE3", "#1D2A2C"))
+top_bar = ctk.CTkFrame(root, height=50, corner_radius=1, fg_color=("#77D3E2", "#0C1F22"))
 top_bar.pack(fill="x")
 
 title = ctk.CTkLabel(

@@ -1,2 +1,0 @@
-pip install pyinstaller
-pyinstaller --onefile --windowed --icon=dicticon.ico --add-data "dicticon.ico;." gui.py
